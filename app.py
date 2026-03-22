@@ -1,23 +1,46 @@
-
 from flask import Flask, render_template, request
-from datetime import datetime
+import json
+import urllib.parse
+import urllib.request
+
 app = Flask(__name__)
-@app.route("/")
-def home():
-    return render_template("index.html")
-@app.route("/calculate", methods=["POST"])
-def calculate_age():
+
+@app.route("/", methods=["GET", "POST"])
+def details():
+    if request.method == "GET":
+        return render_template("index.html")
+    
+    location = request.form.get("location", "").strip()
+    if not location:
+        return render_template("index.html", error="Give thr correct location")
+    
     try:
-        birth_year = int(request.form["birth_year"])
-        current_year = datetime.now().year
-        if birth_year > current_year or birth_year < 1900:
-            return render_template(
-"index.html",
-error="Please enter a valid year (1900 - current year)."
-)
-        age = current_year - birth_year
-        return render_template("index.html", age=age)
-    except ValueError:
-        return render_template("index.html", error="Please enter a valid number.")
+        q = urllib.parse.quote(location)
+
+        url = f"https://photon.komoot.io/api/?q={q}&limit=1"
+        req = urllib.request.Request(url, headers={"User-Agent":
+"FlaskGeocoder/1.0"})
+        
+        source = urllib.request.urlopen(req).read()
+        responseData = json.loads(source)
+
+        features = responseData.get("features", [])
+        if not features:
+            return render_template("index.html", error="Give the correct location")
+        
+        lon, lat = features[0]["geometry"]["coordinates"]
+
+        data = {
+            "latitude": str(lat),
+            "longitude": str(lon),
+        }
+
+        return render_template("index.html", data=data)
+    
+    except Exception:
+        return render_template("index.html", error="Give the correct location")
+    
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)
+    
