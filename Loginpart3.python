@@ -1,0 +1,28 @@
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/submit_resume', methods=['POST'])
+def submit_resume():
+    name = request.form['name']
+    email = request.form['email']
+    phone = request.form['phone']
+    linkedin = request.form['linkedin']
+    github = request.form['github']
+    
+    # In a real application, you would save this data to a database
+    # or process it further. For this example, we'll just print it.
+    print(f"Name: {name}")
+    print(f"Email: {email}")
+    print(f"Phone: {phone}")
+    print(f"LinkedIn: {linkedin}")
+    print(f"GitHub: {github}")
+    
+    return "Resume submitted successfully!"
+
+if __name__ == '__main__':
+    app.run(debug=True)
